@@ -7,94 +7,97 @@ import java.util.Map;
 import indice.estrutura.Indice;
 import indice.estrutura.Ocorrencia;
 
+public class IndicePreCompModelo {
 
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
 
+    private int numDocumentos = 0;
+    private double avgLenPerDocument = 0;
+    private Map<Integer, Integer> tamPorDocumento = new HashMap<Integer, Integer>();
+    private Map<Integer, Double> normaPorDocumento = new HashMap<Integer, Double>();
 
-public class IndicePreCompModelo{
+    private Indice idx;
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
+    public IndicePreCompModelo(Indice idx) {
+        this.idx = idx;
 
-	private int numDocumentos = 0;
-	private double avgLenPerDocument = 0;
-	private Map<Integer,Integer> tamPorDocumento = new HashMap<Integer,Integer>();
-	private Map<Integer,Double> normaPorDocumento = new HashMap<Integer,Double>();
-	
-	
-	
-	private Indice idx;
-	
-	public IndicePreCompModelo(Indice idx)
-	{
-		this.idx = idx;
-		
-		precomputeValues(idx);
-		
-		
-	}
-	/**
-	 * Acumula o (tfxidf)^2 de mais uma ocorrencia (oc) no somatorio para calcular a norma por documento 
-	 * Usar a propria norma para acumular o somatorio
-	 * @param lstOcc
-	 * @param oc
-	 */
-	public void updateSumSquaredForNorm(int numDocsTerm, Ocorrencia oc) {
-		
-	}
-	/**
-	 * Atualiza o tamPorDocumento com mais uma cocorrencia 
-	 * @param oc
-	 */
-	public void updateDocTam(Ocorrencia oc) {
+        precomputeValues(idx);
 
-		
-	}
-	/**
-	 * Inicializa os atributos por meio do indice (idx):
-	 * numDocumentos: o numero de documentos que o indice possui
-	 * avgLenPerDocument: média do tamanho (em palavras) dos documentos
-	 * tamPorDocumento: para cada doc id, seu tamanho (em palavras) - use o metodo updateDocTam para auxiliar
-	 * normaPorDocumento: A norma por documento (cada termo é presentado pelo seu peso (tfxidf) - use o metodo updateSumSquaredForNorm para auxiliar
-	 * @param idx
-	 */
-	private void precomputeValues(Indice idx) {
+    }
 
-	}
+    /**
+     * Acumula o (tfxidf)^2 de mais uma ocorrencia (oc) no somatorio para
+     * calcular a norma por documento Usar a propria norma para acumular o
+     * somatorio
+     *
+     * @param lstOcc
+     * @param oc
+     */
+    public void updateSumSquaredForNorm(int numDocsTerm, Ocorrencia oc) {
 
+    }
 
-	public int getDocumentLength(int docId)
-	{
-		return this.tamPorDocumento.get(docId);
-	}
-	public int getNumDocumentos() {
-		return numDocumentos;
-	}
+    /**
+     * Atualiza o tamPorDocumento com mais uma cocorrencia
+     *
+     * @param oc
+     */
+    public void updateDocTam(Ocorrencia oc) {
+        if (this.tamPorDocumento.containsKey(oc.getDocId())) {
+            this.tamPorDocumento.put(oc.getDocId(), this.tamPorDocumento.get(oc.getDocId()) + oc.getFreq());
+        } else {
+            this.tamPorDocumento.put(oc.getDocId(), oc.getFreq());
+            this.numDocumentos++;
+        }
+    }
 
-	public void setNumDocumentos(int numDocumentos) {
-		this.numDocumentos = numDocumentos;
-	}
+    /**
+     * Inicializa os atributos por meio do indice (idx): numDocumentos: o numero
+     * de documentos que o indice possui avgLenPerDocument: média do tamanho (em
+     * palavras) dos documentos tamPorDocumento: para cada doc id, seu tamanho
+     * (em palavras) - use o metodo updateDocTam para auxiliar
+     * normaPorDocumento: A norma por documento (cada termo é presentado pelo
+     * seu peso (tfxidf) - use o metodo updateSumSquaredForNorm para auxiliar
+     *
+     * @param idx
+     */
+    private void precomputeValues(Indice idx) {
 
-	public double getAvgLenPerDocument() {
-		return avgLenPerDocument;
-	}
+    }
 
-	public void setAvgLenPerDocument(double avgLenPerDocument) {
-		this.avgLenPerDocument = avgLenPerDocument;
-	}
+    public int getDocumentLength(int docId) {
+        return this.tamPorDocumento.get(docId);
+    }
 
-	public Map<Integer, Double> getNormaPorDocumento() {
-		return normaPorDocumento;
-	}
+    public int getNumDocumentos() {
+        return numDocumentos;
+    }
 
-	public void setNormaPorDocumento(Map<Integer, Double> normaPorDocumento) {
-		this.normaPorDocumento = normaPorDocumento;
-	}
+    public void setNumDocumentos(int numDocumentos) {
+        this.numDocumentos = numDocumentos;
+    }
 
-	public double getNormaDocumento(int docId)
-	{
-		return this.normaPorDocumento.get(docId);
-	}
-	
+    public double getAvgLenPerDocument() {
+        return avgLenPerDocument;
+    }
+
+    public void setAvgLenPerDocument(double avgLenPerDocument) {
+        this.avgLenPerDocument = avgLenPerDocument;
+    }
+
+    public Map<Integer, Double> getNormaPorDocumento() {
+        return normaPorDocumento;
+    }
+
+    public void setNormaPorDocumento(Map<Integer, Double> normaPorDocumento) {
+        this.normaPorDocumento = normaPorDocumento;
+    }
+
+    public double getNormaDocumento(int docId) {
+        return this.normaPorDocumento.get(docId);
+    }
+
 }
