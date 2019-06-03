@@ -37,7 +37,10 @@ public class IndicePreCompModelo {
      * @param oc
      */
     public void updateSumSquaredForNorm(int numDocsTerm, Ocorrencia oc) {
-
+        double tf = VectorRankingModel.tf(numDocsTerm);
+        double idf = VectorRankingModel.idf(numDocsTerm, oc.getFreq());
+        //salvando pelo id
+        normaPorDocumento.put(oc.getDocId(), Math.pow(idf*tf,2));
     }
 
     /**
@@ -65,8 +68,29 @@ public class IndicePreCompModelo {
      * @param idx
      */
     private void precomputeValues(Indice idx) {
-
+        numDocumentos = idx.getNumDocumentos();
+        
+        for(String term : idx.getListTermos()){
+            for (Ocorrencia o : idx.getListOccur(term)){
+                updateDocTam(o);
+            }
+        }
+        
+        for (Integer doc : tamPorDocumento.keySet()){
+            avgLenPerDocument += tamPorDocumento.get(doc);
+            
+        }
+        avgLenPerDocument /= tamPorDocumento.size();
+        
+        
+        for(String term : idx.getListTermos()){
+            for (Ocorrencia o : idx.getListOccur(term)){
+            updateSumSquaredForNorm(tamPorDocumento.get(o.getDocId()), o);
+            }
+        }
+        
     }
+    
 
     public int getDocumentLength(int docId) {
         return this.tamPorDocumento.get(docId);
