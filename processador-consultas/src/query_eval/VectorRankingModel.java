@@ -62,7 +62,7 @@ public class VectorRankingModel implements RankingModel {
             }
             
             for(int doc : dj_weight.keySet()){
-                dj_weight.put(doc, dj_weight.get(doc) / idxPrecompVals.getNormaDocumento(doc));
+                dj_weight.put(doc, Math.sqrt(dj_weight.get(doc)));
             }
         }
 
