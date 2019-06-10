@@ -39,7 +39,9 @@ public class ProcessadorConsultas {
                 contentBuilder = new StringBuilder();
                 
                 // criar indice
+                
                 // fazer consulta
+                
             }
         }
         
