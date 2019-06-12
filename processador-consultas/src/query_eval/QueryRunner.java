@@ -1,6 +1,7 @@
 package query_eval;
 import indice.estrutura.IndiceSimples;
 import indexador.Indexador;
+import indice.estrutura.IndiceLight;
 import query_eval.IndicePreCompModelo;
 import indice.estrutura.Ocorrencia;
 
@@ -8,11 +9,15 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Scanner;
+import query_eval.BooleanRankingModel.OPERATOR;
 
 
 public class  QueryRunner {
@@ -49,49 +54,96 @@ public class  QueryRunner {
 	* Os documentos relevantes estão no parametro docRelevantes
 	*/
 	public int countTopNRelevants(int n, List<Integer> lstRespostas, Set<Integer> docRelevantes){
-            return 0;
+            Integer count = 0;
+            for (Integer i = 0; i < n; i ++){
+                if(docRelevantes.contains(lstRespostas.get(i))){
+                    count++;
+                }
+            }
+            return count;
 	}
 	/**
 	Preprocesse a consulta da mesma forma que foi preprocessado o texto do documento.
 	E transforme a consulta em um Map<String,Ocorrencia> onde a String é o termo que ocorreu
 	e Ocorencia define quantas vezes esse termo ocorreu na consulta. Coloque o docId como -1.
-	DICA: tente reaproveitar metodos do indexador para isso. Além disso, se você considerar a consulta como um documento, é possivel fazer
+	DICA: tente reaproveitar metodos do indexador para isso.
+        Além disso, se você considerar a consulta como um documento, é possivel fazer
 	algo parecido com o que foi feito no metodo index do Indexador.
 	*/
-	public Map<String,Ocorrencia> getOcorrenciaTermoConsulta(String consulta){
-            return null;
+	public static Map<String,Ocorrencia> getOcorrenciaTermoConsulta(String consulta){
+            IndiceLight idx = new IndiceLight(100);
+            Map<String,Ocorrencia> ocorrenciaTermo = new HashMap<>();
+            
+            HashMap<String, Integer> mapWords = new HashMap<String, Integer>();
+            for (String word : consulta.split(" ")) {
+
+                if (word.length() > 0) {
+                    if (mapWords.containsKey(word)) {
+                        mapWords.put(word, mapWords.get(word) + 1);
+                    } else {
+                        mapWords.put(word, 1);
+                    }
+                }
+            }
+            
+            for (String word : mapWords.keySet()) {
+                idx.index(word, -1, mapWords.get(word));
+            }
+
+            for (String term : idx.getListTermos()) {
+                for (Ocorrencia ocorrencia : idx.getListOccur(term)){
+                    ocorrenciaTermo.put(term, ocorrencia);
+                }
+            }
+
+            return ocorrenciaTermo;
 	}
 	/**
 	Retorna um mapa para cada termo existente em setTermo, sua lista ocorrencia no indice (atributo idx do QueryRunner).
 	*/
 	public Map<String,List<Ocorrencia>> getOcorrenciaTermoColecao(Set<String> setTermo){
-
-                return null;
+            Map<String,List<Ocorrencia>> ocorrenciaTermoColecao = new HashMap<>();
+            
+            for (String termo : setTermo) {
+                ocorrenciaTermoColecao.put(termo, this.idx.idx.getListOccur(termo));
+            }
+            
+            return ocorrenciaTermoColecao;
 	}
 
 	/**
 	* A partir do indice (atributo idx), retorna a lista de ids de documentos desta consulta 
 	* usando o modelo especificado pelo atributo queryRankingModel
 	*/
-	public static Map<String,List<Ocorrencia>> getDocsTermo(String consulta)
+	public Map<String,List<Ocorrencia>> getDocsTermo(String consulta)
 	{
-
-		
-		
+		Map<String,List<Ocorrencia>> docsTermo = new HashMap<>();
+                
 		//Obtenha, para cada termo da consulta, sua ocorrencia por meio do método getOcorrenciaTermoConsulta
-		Map<String,Ocorrencia> mapOcorrencia = null;
+		Map<String,Ocorrencia> mapOcorrencia = getOcorrenciaTermoConsulta(consulta);
 
 		//obtenha a lista de ocorrencia dos termos na colecao por meio do método  getOcorrenciaTermoColecao
-		Map<String,List<Ocorrencia>> lstOcorrPorTermoDocs = null;
+		Map<String,List<Ocorrencia>> lstOcorrPorTermoDocs = getOcorrenciaTermoColecao(mapOcorrencia.keySet());
 	 	
 
 		//utilize o queryRankingModel para retornar o documentos ordenados de acordo com a ocorrencia de termos na consulta e na colecao
-		return null;
+                List<Integer> orderedDocs = queryRankingModel.getOrderedDocs(mapOcorrencia, lstOcorrPorTermoDocs);
+                
+                for (String termo : lstOcorrPorTermoDocs.keySet()){
+                    Collections.sort(lstOcorrPorTermoDocs.get(termo), new Comparator<Ocorrencia>(){
+                        public int compare(Ocorrencia l, Ocorrencia r){
+                            return Integer.compare(orderedDocs.indexOf(l.getDocId()), orderedDocs.indexOf(r.getDocId()));
+                        }
+                    });
+                }
+                
+		return lstOcorrPorTermoDocs;
 	}
 
 	
 	public static void main(String[] args) throws IOException, ClassNotFoundException
 	{
+                Scanner keyboard = new Scanner(System.in);
 		//leia o indice (base da dados fornecida)
   		Indexador indexador = new Indexador();
                 
@@ -107,8 +159,11 @@ public class  QueryRunner {
 		HashMap<String,Set<Integer>> mapRelevances = getRelevancePerQuery();
 
 		System.out.println("Fazendo query...");
-		String query = "São Paulo";
+		String query;
                 
+                
+                System.out.println("Pesquise algo: ");
+                query = keyboard.next();
                 
 		runQuery(query, indexador, idxPreCom, mapRelevances);
 	}
@@ -116,22 +171,48 @@ public class  QueryRunner {
 	public static void runQuery(String query,Indexador idx, IndicePreCompModelo idxPreCom ,HashMap<String,Set<Integer>> mapRelevantes) {
 		long time;
 		time = System.currentTimeMillis();
-		
+		QueryRunner qr = null;
 		//PEça para usuario selecionar entre BM25, Booleano ou modelo vetorial para intanciar o QueryRunner 
 		//apropriadamente. NO caso do booleano, vc deve pedir ao usuario se será um "and" ou "or" entre os termos. 
 		//abaixo, existem exemplos fixos.
 		//QueryRunner qr = new QueryRunner(idx,new BooleanRankingModel(OPERATOR.AND));
 		//QueryRunner qr = new QueryRunner(idx,new VectorRankingModel(idxPreCom));
-		QueryRunner qr = new QueryRunner(idx,new BM25RankingModel(idxPreCom, 0.75, 1));
+                
+                Scanner keyboard = new Scanner(System.in);
+                System.out.println("Escolha entre os valores abaixo: ");
+                System.out.println("(1) BM25");
+                System.out.println("(2) Booleano");
+                System.out.println("(3) Modelo Vetorial");
+                int resultado = keyboard.nextInt();
+                switch(resultado){
+                    case 1:
+                        qr = new QueryRunner(idx,new BM25RankingModel(idxPreCom, 0.75, 1));
+                        break;
+                    case 2:
+                        System.out.println("Selecione o operador: ");
+                        System.out.println("(1) AND");
+                        System.out.println("(2) OR");
+                        resultado = keyboard.nextInt();
+                        if(resultado == 1){
+                            qr = new QueryRunner(idx,new BooleanRankingModel(OPERATOR.AND));
+                        }
+                        else
+                            qr = new QueryRunner(idx,new BooleanRankingModel(OPERATOR.OR));
+                        break;
+                    case 3:
+                        qr = new QueryRunner(idx,new VectorRankingModel(idxPreCom));
+                        break;
+                }
+                
 		
 		System.out.println("Total: "+(System.currentTimeMillis()-time)/1000.0+" segs");
 		
-		List<Integer> lstResposta = null; /**utilize o metodo getDocsTerm para pegar a lista de termos da resposta**/
+		List<Integer> lstResposta = (List) qr.getDocsTermo(query).keySet(); /**utilize o metodo getDocsTerm para pegar a lista de termos da resposta**/
 		System.out.println("Tamanho: "+lstResposta.size());
 		
 		//nesse if, vc irá verificar se a consulta possui documentos relevantes
 		//se possuir, vc deverá calcular a Precisao e revocação nos top 5, 10, 20, 50. O for que fiz abaixo é só uma sugestao e o metododo countTopNRelevants podera auxiliar no calculo da revocacao e precisao 
-		if(true)
+		if(lstResposta.size() > 0)
 		{
 			int[] arrPrec = {5,10,20,50};
 			double revocacao = 0;

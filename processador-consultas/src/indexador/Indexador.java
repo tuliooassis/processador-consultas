@@ -91,9 +91,9 @@ public class Indexador {
                     is.index(word, Integer.parseInt(file.getName().replace(".html", "")), mapWords.get(word));
                 }
 
-                if (countDocs % 100 == 0) {
+                if (countDocs % 1000 == 0) {
                     is.concluiIndexacao();
-                    BufferedWriter writer = new BufferedWriter(new FileWriter("../output" + (int) countDocs / 100 + ".txt"));
+                    BufferedWriter writer = new BufferedWriter(new FileWriter("../outputs/output" + (int) countDocs / 100 + ".txt"));
                     writer.write(is.toString());
                     writer.close();
 
