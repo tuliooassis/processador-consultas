@@ -7,6 +7,7 @@ package indexador;
 
 import indice.estrutura.Indice;
 import indice.estrutura.IndiceLight;
+import indice.estrutura.IndiceSimples;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -32,8 +33,8 @@ public class Indexador {
     public Indice idx;
     
     public Indexador(){
-        //this.idx = new IndiceSimples();
-        this.idx = new IndiceLight(10000);
+        this.idx = new IndiceSimples();
+//        this.idx = new IndiceLight(10000);
         this.getIdx();
     }
     
@@ -44,7 +45,7 @@ public class Indexador {
         SnowballStemmer stemmer = new SnowballStemmer(SnowballStemmer.ALGORITHM.PORTUGUESE);
 
         //IndiceSimples is = new IndiceSimples();
-        IndiceLight is = new IndiceLight(10000);
+//        this.idx = new IndiceLight(10000);
         int countDocs = 0;
         try {
             for (File file : listFileTree(new File("../wikiSample/"))) {
@@ -88,17 +89,17 @@ public class Indexador {
                 }
 
                 for (String word : mapWords.keySet()) {
-                    is.index(word, Integer.parseInt(file.getName().replace(".html", "")), mapWords.get(word));
+                    this.idx.index(word, Integer.parseInt(file.getName().replace(".html", "")), mapWords.get(word));
                 }
 
-                if (countDocs % 1000 == 0) {
-                    is.concluiIndexacao();
+                if (countDocs % 423 == 0) {
+                    this.idx.concluiIndexacao();
                     BufferedWriter writer = new BufferedWriter(new FileWriter("../outputs/output" + (int) countDocs / 100 + ".txt"));
-                    writer.write(is.toString());
+                    writer.write(this.idx.toString());
                     writer.close();
 
-                    is = new IndiceLight(10000);
-                    System.gc();
+//                    this.idx = new IndiceSimples();
+//                    System.gc();
 
                 }
 

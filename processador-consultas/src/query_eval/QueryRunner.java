@@ -70,7 +70,7 @@ public class  QueryRunner {
         Além disso, se você considerar a consulta como um documento, é possivel fazer
 	algo parecido com o que foi feito no metodo index do Indexador.
 	*/
-	public static Map<String,Ocorrencia> getOcorrenciaTermoConsulta(String consulta){
+	public Map<String,Ocorrencia> getOcorrenciaTermoConsulta(String consulta){
             IndiceLight idx = new IndiceLight(100);
             Map<String,Ocorrencia> ocorrenciaTermo = new HashMap<>();
             
@@ -91,7 +91,7 @@ public class  QueryRunner {
             }
 
             for (String term : idx.getListTermos()) {
-                for (Ocorrencia ocorrencia : idx.getListOccur(term)){
+                for (Ocorrencia ocorrencia : this.idx.idx.getListOccur(term)){
                     ocorrenciaTermo.put(term, ocorrencia);
                 }
             }
@@ -207,7 +207,7 @@ public class  QueryRunner {
 		
 		System.out.println("Total: "+(System.currentTimeMillis()-time)/1000.0+" segs");
 		
-		List<Integer> lstResposta = (List) qr.getDocsTermo(query).keySet(); /**utilize o metodo getDocsTerm para pegar a lista de termos da resposta**/
+		Set lstResposta = qr.getDocsTermo(query).keySet(); /**utilize o metodo getDocsTerm para pegar a lista de termos da resposta**/
 		System.out.println("Tamanho: "+lstResposta.size());
 		
 		//nesse if, vc irá verificar se a consulta possui documentos relevantes
